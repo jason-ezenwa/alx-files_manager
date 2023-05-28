@@ -145,7 +145,7 @@ class FilesController {
   static async getIndex(request, response) {
     // convert id from string to the ObjectID format it usually is in mongodb
     const { parentId } = request.query;
-    const page = parseInt(request.query.page) || 0
+    const page = parseInt(request.query.page, 10) || 0;
     const token = request.header('X-Token');
     const key = `auth_${token}`;
     const userId = await redisClient.get(key);
@@ -175,13 +175,14 @@ class FilesController {
             {
               userId: userObjId,
               parentId: parentObjId,
-            }
+            },
           ).sort(
-            {_id: 1
-            }).skip(page * 20 ).limit(20).toArray();
+            { _id: 1 },
+          ).skip(page * 20).limit(20)
+            .toArray();
           // to remove the local path and change id representation
           // from _id to id
-          const finalFilesArray = []
+          const finalFilesArray = [];
 
           for (const file of requestedFiles) {
             const fileobj = {
@@ -190,22 +191,23 @@ class FilesController {
               name: file.name,
               type: file.type,
               isPublic: file.isPublic,
-              parentId: file.parentId
+              parentId: file.parentId,
             };
-            finalFilesArray.push(fileobj)
+            finalFilesArray.push(fileobj);
           }
           response.status(201).send(finalFilesArray);
         } else {
           const requestedFiles = await filesCollection.find(
             {
               userId: userObjId,
-            }
+            },
           ).sort(
-            {_id: 1
-            }).skip(page * 20 ).limit(20).toArray();
+            { _id: 1 },
+          ).skip(page * 20).limit(20)
+            .toArray();
           // to remove the local path and change id representation
           // from _id to id
-          const finalFilesArray = []
+          const finalFilesArray = [];
 
           for (const file of requestedFiles) {
             const fileobj = {
@@ -214,9 +216,9 @@ class FilesController {
               name: file.name,
               type: file.type,
               isPublic: file.isPublic,
-              parentId: file.parentId
+              parentId: file.parentId,
             };
-            finalFilesArray.push(fileobj)
+            finalFilesArray.push(fileobj);
           }
           response.status(201).send(finalFilesArray);
         }
