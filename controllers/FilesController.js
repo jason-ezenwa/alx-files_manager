@@ -1,8 +1,15 @@
 import { v4 as uuidv4 } from 'uuid';
-import { promises as fs } from 'fs';
+import Queue from 'bull/lib/queue';
+import { promisify } from 'util';
+import { contentType } from 'mime-types';
+import { promises as fs, stat, existsSync, realpath } from 'fs';
 import { ObjectID } from 'mongodb';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
+
+
+const fileQueue = new Queue('thumbnail generation');
+
 
 class FilesController {
   static async postUpload(request, response) {
@@ -95,9 +102,14 @@ class FilesController {
             localPath: filePath,
           },
         );
-        const id = inserted.insertedId;
+        const fileId = inserted.insertedId;
+	// start thumbnail generation worker
+	if (type === 'image') {
+	  const jobName = `Image thumbnail [${userId}-${id}]`;
+	  fileQueue.add({ userId, fileId, name: jobName });
+	}
         response.status(201).json({
-          id, userId, name, type, isPublic, parentId,
+	  id: fileId, userId, name, type, isPublic, parentId,
         });
       }
     } else {
@@ -229,6 +241,114 @@ class FilesController {
       response.status(401).json({ error: 'Unauthorized' });
     }
   }
+  static async putPublish(req, res) {
+    const { id } = req.params;
+    const token = req.header('X-Token');
+    const key = `auth_${token}`;
+    const userId = await redisClient.get(key);
+    // convert id from string to the ObjectID format it usually is in mongodb
+    const userObjId = new ObjectID(userId);
+    const fileId = new ObjectID(id);
+    if (userId) {
+    	const fileFilter = {
+      	  _id: fileId,
+      	  userId: userObjId
+    	}
+	const filesCollection = dbClient.db.collection('files');
+	const file = await filesCollection.findOne(fileFilter);
+	if (!file) {
+	  res.status(404).json({ error: 'Not found'});
+	  return;
+	}
+	await filesCollection.updateOne(fileFilter, { $set: {isPublic: true} });
+	res.status(200).json({
+	 id: file._id,
+         userId: file.userId,
+         name: file.name,
+         type: file.type,
+         isPublic: true,
+         parentId: file.parentId,
+	});
+    }
+  }
+  static async putUnPublish(req, res) {
+    const { id } = req.params;
+    const token = req.header('X-Token');
+    const key = `auth_${token}`;
+    const userId = await redisClient.get(key);
+    // convert id from string to the ObjectID format it usually is in mongodb
+    const userObjId = new ObjectID(userId);
+    const fileId = new ObjectID(id);
+    if (userId) {
+        const fileFilter = {
+          _id: fileId,
+          userId: userObjId
+        }
+        const filesCollection = dbClient.db.collection('files');
+        const file = await filesCollection.findOne(fileFilter);
+        if (!file) {
+          res.status(404).json({ error: 'Not found'});
+          return;
+        }
+        await filesCollection.updateOne(fileFilter, { $set: {isPublic: false} });
+        res.status(200).json({
+         id: file._id,
+         userId: file.userId,
+         name: file.name,
+         type: file.type,
+         isPublic: false,
+         parentId: file.parentId,
+        });
+    }
+  }
+  static async getFile(req, res) {
+    const { id } = req.params;
+    const size = req.query.size || null;
+    console.log(req);
+    const token = req.header('X-Token');
+    const key = `auth_${token}`;
+    const userId = await redisClient.get(key);
+    // convert id from string to the ObjectID format it usually is in mongodb
+    const userObjId = new ObjectID(userId);
+    const fileId = new ObjectID(id);
+    if (userId) {
+        const fileFilter = {
+          _id: fileId,
+        }
+        const filesCollection = dbClient.db.collection('files');
+        const file = await filesCollection.findOne(fileFilter);
+        if (!file) {
+          res.status(404).json({ error: 'Not found'});
+          return;
+        }
+	if (file.type === 'folder') {
+	  res.status(400).json({ error: 'A folder doesnt\'t have content'});
+	  return;
+	}
+	let filePath = file.localPath;
+	if (size) {
+          filePath = `${file.localPath}_${size}`;
+	}
+	const statAsync = promisify(stat);
+	const realpathAsync = promisify(realpath);
+	if (existsSync(filePath)) {
+	  const fileInfo = await statAsync(filePath);
+	  if (!fileInfo.isFile()) {
+            res.status(404).json({ error: 'Not found' });
+            return;
+	  }
+	} else {
+	  res.status(404).json({ error: 'Not found' });
+	  return ;
+	}
+        const absoluteFilePath = await realpathAsync(filePath);
+	res.setHeader('Content-Type', contentType(file.name) || 'text/plain; charset=utf-8');
+	res.status(200).sendFile(absoluteFilePath);
+    }
+  }
+
 }
+
+
 
 module.exports = FilesController;
