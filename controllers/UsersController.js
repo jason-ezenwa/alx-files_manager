@@ -1,7 +1,12 @@
 import sha1 from 'sha1';
+import Queue from 'bull/lib/queue';
 import { ObjectID } from 'mongodb';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
+
+
+const userQueue = new Queue('email sending');
+
 
 class UsersController {
   static async postNew(request, response) {
@@ -23,7 +28,9 @@ class UsersController {
 
     const shaHashedPw = sha1(password);
     const inserted = await usersCollection.insertOne({ email, password: shaHashedPw });
-    response.status(201).json({ id: inserted.insertedId, email });
+    const userId = inserted.insertedId;
+    userQueue.add({ userId })
+    response.status(201).json({ id: userId, email });
   }
 
   static async getMe(request, response) {
