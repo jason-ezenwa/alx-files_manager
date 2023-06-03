@@ -232,7 +232,7 @@ class FilesController {
     const token = request.header('X-Token');
     const key = `auth_${token}`;
     const userId = await redisClient.get(key);
-    const fileId = req.params.id;
+    const fileId = request.params.id;
     // convert id from string to the ObjectID format it usually is in mongodb
     const fileObjId = new ObjectID(fileId);
     const userObjId = new ObjectID(userId);
@@ -272,7 +272,7 @@ class FilesController {
     const token = request.header('X-Token');
     const key = `auth_${token}`;
     const userId = await redisClient.get(key);
-    const fileId = req.params.id;
+    const fileId = request.params.id;
     // convert id from string to the ObjectID format it usually is in mongodb
     const fileObjId = new ObjectID(fileId);
     const userObjId = new ObjectID(userId);
