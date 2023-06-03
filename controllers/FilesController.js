@@ -249,15 +249,15 @@ class FilesController {
         response.status(404).json({ error: 'Not found' });
         return;
       }
-      await filesCollection.updateOne({ _id: fileObjId, userId: userObjId}, {$set: {'isPublic': true}});
+      const updatedfile = await filesCollection.updateOne({ _id: fileObjId, userId: userObjId}, {$set: {'isPublic': true}});
       response.status(200).json(
         {
-          id: fileToBeSet._id,
-          userId: fileToBeSet.userId,
-          name: fileToBeSet.name,
-          type: fileToBeSet.type,
-          isPublic: fileToBeSet.isPublic,
-          parentId: fileToBeSet.parentId,
+          id: updatedfile._id,
+          userId: updatedfile.userId,
+          name: updatedfile.name,
+          type: updatedfile.type,
+          isPublic: updatedfile.isPublic,
+          parentId: updatedfile.parentId,
         },
       );
 
@@ -289,15 +289,15 @@ class FilesController {
         response.status(404).json({ error: 'Not found' });
         return;
       }
-      await filesCollection.updateOne({ _id: fileObjId, userId: userObjId}, {$set: {'isPublic': false}});
+      const updatedfile = await filesCollection.updateOne({ _id: fileObjId, userId: userObjId}, {$set: {'isPublic': false}});
       response.status(200).json(
         {
-          id: fileToBeSet._id,
-          userId: fileToBeSet.userId,
-          name: fileToBeSet.name,
-          type: fileToBeSet.type,
-          isPublic: fileToBeSet.isPublic,
-          parentId: fileToBeSet.parentId,
+          id: updatedfile._id,
+          userId: updatedfile.userId,
+          name: updatedfile.name,
+          type: updatedfile.type,
+          isPublic: updatedfile.isPublic,
+          parentId: updatedfile.parentId,
         },
       );
 
