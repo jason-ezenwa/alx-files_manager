@@ -3,6 +3,8 @@ import { promises as fs } from 'fs';
 import { ObjectID } from 'mongodb';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
+import path from 'path';
+const mime = require('mime-types')
 
 class FilesController {
   static async postUpload(request, response) {
@@ -304,6 +306,50 @@ class FilesController {
       );
 
 
+    } else {
+      response.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+  }
+
+  static async getFile(request, response) {
+    const token = request.header('X-Token');
+    const key = `auth_${token}`;
+    const userId = await redisClient.get(key);
+    const fileId = request.params.id;
+    // convert id from string to the ObjectID format it usually is in mongodb
+    const fileObjId = new ObjectID(fileId);
+    const userObjId = new ObjectID(userId);
+    if (userId) {
+      const users = dbClient.db.collection('users');
+      const filesCollection = dbClient.db.collection('files');
+      const existingUser = await users.findOne({ _id: userObjId });
+      if (!existingUser) {
+        response.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+      const fileRequested = await filesCollection.findOne({ _id: fileObjId, userId: userObjId});
+      if (!fileRequested) {
+        response.status(404).json({ error: 'Not found' });
+        return;
+      }
+      if (fileRequested.isPublic === false) {
+        response.status(404).json({ error: 'Not found' });
+        return;
+      }
+      if (fileRequested.type === "folder") {
+        response.status(400).json({ error: "A folder doesn't have content" });
+        return;
+      }
+      try {
+        const extention = path.extname(fileRequested.localPath);
+        const contentType = mime.contentType(extention);
+        const fileContent = await fs.readFile(fileRequested.localPath, 'utf-8');
+        response.status(200).setHeader('Content-Type', contentType).send(fileContent)
+      } catch (error) {
+        console.log(error);
+        response.status(404).json({ error: 'Not found' });
+      }
     } else {
       response.status(401).json({ error: 'Unauthorized' });
       return;
