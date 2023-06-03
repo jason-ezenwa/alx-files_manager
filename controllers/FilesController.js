@@ -249,7 +249,8 @@ class FilesController {
         response.status(404).json({ error: 'Not found' });
         return;
       }
-      const updatedfile = await filesCollection.updateOne({ _id: fileObjId, userId: userObjId}, {$set: {'isPublic': true}});
+      await filesCollection.updateOne({ _id: fileObjId, userId: userObjId}, {$set: {'isPublic': true}});
+      const updatedfile = await filesCollection.findOne({ _id: fileObjId, userId: userObjId});
       response.status(200).json(
         {
           id: updatedfile._id,
@@ -289,7 +290,8 @@ class FilesController {
         response.status(404).json({ error: 'Not found' });
         return;
       }
-      const updatedfile = await filesCollection.updateOne({ _id: fileObjId, userId: userObjId}, {$set: {'isPublic': false}});
+      await filesCollection.updateOne({ _id: fileObjId, userId: userObjId}, {$set: {'isPublic': false}});
+      const updatedfile = await filesCollection.findOne({ _id: fileObjId, userId: userObjId});
       response.status(200).json(
         {
           id: updatedfile._id,
