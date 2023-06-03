@@ -228,7 +228,7 @@ class FilesController {
     }
   }
 
-  static async putPublish () {
+  static async putPublish (request, response) {
     const token = request.header('X-Token');
     const key = `auth_${token}`;
     const userId = await redisClient.get(key);
@@ -268,7 +268,7 @@ class FilesController {
     }
   }
   
-  static async putUnpublish () {
+  static async putUnpublish (request, response) {
     const token = request.header('X-Token');
     const key = `auth_${token}`;
     const userId = await redisClient.get(key);
