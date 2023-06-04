@@ -337,6 +337,7 @@ class FilesController {
         return;
       }
       const fileRequested = await filesCollection.findOne({ _id: fileObjId, userId: userObjId});
+      console.log(fileRequested);
       if (!fileRequested) {
         response.status(404).json({ error: 'Not found' });
         return;
@@ -354,15 +355,15 @@ class FilesController {
         // get file. if size is specified, get that one
         if (size) {
           const pathToFile = fileRequested.localPath + `_${size}`;
-          const fileContent = await fs.readFile(pathToFile, 'utf-8');
+          const fileContent = await fs.readFile(pathToFile);
           response.header('Content-Type', contentType).status(200).send(fileContent);
         } else {
           const pathToFile = fileRequested.localPath;
           const fileContent = await fs.readFile(pathToFile);
-          response.status(200).setHeader('Content-Type', contentType).send(fileContent);
+          response.header('Content-Type', contentType).status(200).send(fileContent);
         }
       } catch (error) {
-        console.log(error);
+        console.log('error in reading file', error);
         response.status(404).json({ error: 'Not found' });
       }
     } else {
