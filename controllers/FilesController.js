@@ -324,6 +324,7 @@ class FilesController {
     const key = `auth_${token}`;
     const userId = await redisClient.get(key);
     const fileId = request.params.id;
+    const {size} = request.query;
     // convert id from string to the ObjectID format it usually is in mongodb
     const fileObjId = new ObjectID(fileId);
     const userObjId = new ObjectID(userId);
@@ -351,8 +352,16 @@ class FilesController {
       try {
         const extention = path.extname(fileRequested.localPath);
         const contentType = mime.contentType(extention);
-        const fileContent = await fs.readFile(fileRequested.localPath, 'utf-8');
-        response.status(200).setHeader('Content-Type', contentType).send(fileContent)
+        // get file. if size is specified, get that one
+        if (size) {
+          const pathToFile = fileRequested.localPath + `_${size}`;
+          const fileContent = await fs.readFile(pathToFile, 'utf-8');
+          response.status(200).setHeader('Content-Type', contentType).send(fileContent);
+        } else {
+          const pathToFile = fileRequested.localPath;
+          const fileContent = await fs.readFile(pathToFile, 'utf-8');
+          response.status(200).setHeader('Content-Type', contentType).send(fileContent);
+        }
       } catch (error) {
         console.log(error);
         response.status(404).json({ error: 'Not found' });
