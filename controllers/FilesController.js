@@ -350,16 +350,15 @@ class FilesController {
         return;
       }
       try {
-        const extention = path.extname(fileRequested.localPath);
-        const contentType = mime.contentType(extention);
+        const contentType = mime.contentType(fileRequested.name);
         // get file. if size is specified, get that one
         if (size) {
           const pathToFile = fileRequested.localPath + `_${size}`;
           const fileContent = await fs.readFile(pathToFile, 'utf-8');
-          response.status(200).setHeader('Content-Type', contentType).send(fileContent);
+          response.header('Content-Type', contentType).status(200).send(fileContent);
         } else {
           const pathToFile = fileRequested.localPath;
-          const fileContent = await fs.readFile(pathToFile, 'utf-8');
+          const fileContent = await fs.readFile(pathToFile);
           response.status(200).setHeader('Content-Type', contentType).send(fileContent);
         }
       } catch (error) {
