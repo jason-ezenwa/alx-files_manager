@@ -11,8 +11,8 @@ fileQueue.process(async function(job, done) {
   if (!job.data.fileId) {
     done(new Error('Missing fileId'));
   }
-  const userObjId = new ObjectID(userId);
-  const fileObjId = new ObjectID(fileId);
+  const userObjId = new ObjectID(job.data.userId);
+  const fileObjId = new ObjectID(job.data.fileId);
   const files = dbClient.db.collection('files');
   const searchedFile = await files.findOne({ _id: fileObjId, userId: userObjId });
   if (!searchedFile) {
