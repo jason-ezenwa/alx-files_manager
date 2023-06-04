@@ -4,7 +4,8 @@ import { ObjectID } from 'mongodb';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
 import path from 'path';
-const mime = require('mime-types')
+const mime = require('mime-types');
+const Queue = require('bull');
 
 class FilesController {
   static async postUpload(request, response) {
@@ -98,6 +99,11 @@ class FilesController {
           },
         );
         const id = inserted.insertedId;
+        // add a job to this queue with the userId and fileId
+
+        jobData = {userId, fileId: id};
+        const fileQueue = new Queue('file queue');
+        fileQueue.add(jobData);
         response.status(201).json({
           id, userId, name, type, isPublic, parentId,
         });
