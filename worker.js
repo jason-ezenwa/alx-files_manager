@@ -3,20 +3,20 @@ import { ObjectID } from 'mongodb';
 const imageThumbnail = require('image-thumbnail');
 import dbClient from '../utils/db';
 
-const fileQueue = Queue('file queue');
+const fileQueue = Queue('fileQueue', 'redis://127.0.0.1:6379');
 fileQueue.process(async function(job, done) {
   if (!job.data.userId) {
-    throw new Error('Missing userId');
+    done(new Error('Missing userId'));
   }
   if (!job.data.fileId) {
-    throw new Error('Missing fileId');
+    done(new Error('Missing fileId'));
   }
   const userObjId = new ObjectID(userId);
   const fileObjId = new ObjectID(fileId);
   const files = dbClient.db.collection('files');
   const searchedFile = await files.findOne({ _id: fileObjId, userId: userObjId });
   if (!searchedFile) {
-    throw new Error ('File not found')
+    done(new Error('File not found'));
   }
   try {
     const fiveHundredThumbnail = await imageThumbnail(searchedFile.localPath, { width: 500 });
