@@ -1,7 +1,7 @@
 const Queue = require('bull');
 import { ObjectID } from 'mongodb';
 const imageThumbnail = require('image-thumbnail');
-import dbClient from '../utils/db';
+import dbClient from './utils/db';
 
 const fileQueue = Queue('fileQueue', 'redis://127.0.0.1:6379');
 fileQueue.process(async function(job, done) {
