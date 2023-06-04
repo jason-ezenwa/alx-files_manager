@@ -39,7 +39,7 @@ fileQueue.process(async function(job, done) {
     const oneHundredThumbnail = await imageThumbnail(searchedFile.localPath, { width: 100 });
     console.log(oneHundredThumbnail);
     try {
-      const filePath = searchedFile.localPath + '_250'
+      const filePath = searchedFile.localPath + '_100'
       await fs.writeFile(filePath, oneHundredThumbnail);
     } catch (error) {
       console.log(error);
