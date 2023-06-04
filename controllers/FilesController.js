@@ -102,7 +102,7 @@ class FilesController {
         if (type === 'image') {
           // add a job to this queue with the userId and fileId
           const fileQueue = new Queue('fileQueue', 'redis://127.0.0.1:6379');
-          jobData = {userId, fileId: id};
+          const jobData = {userId, fileId: id};
           fileQueue.add(jobData);
         }
         response.status(201).json({
