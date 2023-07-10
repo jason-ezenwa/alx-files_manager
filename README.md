@@ -1,7 +1,7 @@
 # Files Manager API
 This repository contains an API for a files manager developed with Node.js, that enables user authentication, temporary storage with Redis, creation of image thumbnails, and storage of file information using MongoDB. This collaborative project was developed by Chukwuemelie Obumse and Afeez Abu.
 
-Features
+# Features
 The Files Manager API provides the following features:
 
 User Authentication: The API supports user authentication, allowing users to securely access their files and manage them through appropriate authorization mechanisms.
